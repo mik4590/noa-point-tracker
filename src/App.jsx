@@ -27,6 +27,13 @@ const BONUSES = [
   { label: 'Positive feedback', points: 5 }
 ];
 
+const ENTRY_TYPES = [
+  { label: 'Deduction', value: 'deduction' },
+  { label: 'Bonus', value: 'bonus' },
+  { label: 'Grade', value: 'grade' },
+  { label: 'Custom', value: 'custom' }
+];
+
 function App() {
   const [points, setPoints] = useState(100);
   const [history, setHistory] = useState([]);
@@ -36,6 +43,10 @@ function App() {
   const [editingEntry, setEditingEntry] = useState(null);
   const [customDesc, setCustomDesc] = useState('');
   const [customPoints, setCustomPoints] = useState('');
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [showPasswordPrompt, setShowPasswordPrompt] = useState(false);
+  const [password, setPassword] = useState('');
+  const [actionToConfirm, setActionToConfirm] = useState(null);
 
   const month = new Date().toLocaleString('default', { month: 'long', year: 'numeric' });
 
@@ -52,42 +63,97 @@ function App() {
     localStorage.setItem(`points-${month}`, JSON.stringify({ points, history }));
   }, [points, history, month]);
 
-const addEntry = (description, pointValue) => {
-    const entry = {
-      description,
-      points: pointValue,
-      date: new Date().toLocaleDateString(),
-      isPositive: pointValue > 0
-    };
-    setHistory(prev => [...prev, entry]);
-    setPoints(prev => prev + pointValue);
-    setSelectedType('');
-    setSelectedEvent('');
+  const checkPassword = () => {
+    if (password === '102030') {
+      setIsAdmin(true);
+      setShowPasswordPrompt(false);
+      setPassword('');
+      // Execute the pending action
+      if (actionToConfirm) {
+        actionToConfirm();
+        setActionToConfirm(null);
+      }
+    } else {
+      alert('Incorrect code');
+      setPassword('');
+    }
+  };
+  
+  const requirePassword = (action) => {
+    if (isAdmin) {
+      action();
+    } else {
+      setActionToConfirm(() => action);
+      setShowPasswordPrompt(true);
+    }
+  };
+
+  const addEntry = (description, pointValue) => {
+    requirePassword(() => {
+      const entry = {
+        description,
+        points: pointValue,
+        date: new Date().toLocaleDateString(),
+        isPositive: pointValue > 0
+      };
+      setHistory(prev => [...prev, entry]);
+      setPoints(prev => prev + pointValue);
+      setSelectedType('');
+      setSelectedEvent('');
+    });
+  };
+  const addGrade = () => {
+    requirePassword(() => {
+      if (!selectedSubject || !grade) return;
+      
+      const expectation = GRADE_EXPECTATIONS[selectedSubject];
+      let points = 0;
+      let description = `${selectedSubject} grade: ${grade}`;
+  
+      if (grade < expectation.min) {
+        points = -4;
+        description += ' (Below minimum)';
+      } else if (grade >= expectation.target) {
+        points = 5;
+        description += ' (Met target)';
+      }
+  
+      addEntry(description, points);
+      setSelectedSubject('');
+      setGrade('');
+    });
   };
 
   const handleEdit = (entry, index) => {
-    setEditingEntry({ ...entry, index });
+    requirePassword(() => {
+      setEditingEntry({ ...entry, index });
+    });
   };
 
   const handleSaveEdit = (e) => {
     e.preventDefault();
-    const oldEntry = history[editingEntry.index];
-    const pointsDiff = editingEntry.points - oldEntry.points;
-    
-    setPoints(prev => prev + pointsDiff);
-    setHistory(prev => prev.map((entry, i) => 
-      i === editingEntry.index ? {
-        ...editingEntry,
-        isPositive: editingEntry.points > 0
-      } : entry
-    ));
-    setEditingEntry(null);
+    requirePassword(() => {
+      const oldEntry = history[editingEntry.index];
+      const pointsDiff = editingEntry.points - oldEntry.points;
+      
+      setPoints(prev => prev + pointsDiff);
+      setHistory(prev => prev.map((entry, i) => 
+        i === editingEntry.index ? {
+          ...editingEntry,
+          isPositive: editingEntry.points > 0
+        } : entry
+      ));
+      setEditingEntry(null);
+    });
   };
 
   const handleDelete = (index) => {
-    const entry = history[index];
-    setPoints(prev => prev - entry.points);
-    setHistory(prev => prev.filter((_, i) => i !== index));
+    requirePassword(() => {
+      const entry = history[index];
+      setPoints(prev => prev - entry.points);
+      setHistory(prev => prev.filter((_, i) => i !== index));
+      setEditingEntry(null);
+    });
   };
 
   const exportData = () => {
@@ -108,6 +174,39 @@ const addEntry = (description, pointValue) => {
 
 return (
     <div className="min-h-screen bg-gradient-to-b from-pink-50 to-pink-100 p-4">
+    {showPasswordPrompt && (
+      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div className="bg-white rounded-2xl p-6 w-80">
+          <h3 className="text-xl font-semibold text-pink-800 mb-4">Enter Code</h3>
+          <input
+            type="password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            className="w-full p-3 border border-pink-200 rounded-xl mb-4"
+            placeholder="Enter code to make changes"
+          />
+          <div className="flex justify-end gap-2">
+            <button
+              onClick={() => {
+                setShowPasswordPrompt(false);
+                setPassword('');
+                setActionToConfirm(null);
+              }}
+              className="px-4 py-2 text-gray-600 hover:text-gray-700"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={checkPassword}
+              className="px-6 py-2 bg-pink-600 text-white rounded-xl hover:bg-pink-700"
+            >
+              Submit
+            </button>
+          </div>
+        </div>
+      </div>
+    )}
+    
       <div className="max-w-4xl mx-auto">
         {/* Points Display */}
         <div className="bg-white rounded-2xl shadow-lg p-8 mb-6 text-center">
@@ -161,7 +260,9 @@ return (
                 <option value="">Select Entry Type</option>
                 <option value="deduction">Deduction</option>
                 <option value="bonus">Bonus</option>
+                <option value="grade">Grade</option>
                 <option value="custom">Custom Entry</option>
+
               </select>
 
               {selectedType === 'deduction' && (
@@ -195,6 +296,36 @@ return (
                   ))}
                 </select>
               )}
+
+              {selectedType === 'grade' && (
+  <div className="flex gap-2">
+    <select
+      value={selectedSubject}
+      onChange={(e) => setSelectedSubject(e.target.value)}
+      className="flex-1 p-3 border border-pink-200 rounded-xl"
+    >
+      <option value="">Select Subject</option>
+      {Object.entries(GRADE_EXPECTATIONS).map(([subject, { min, target }]) => (
+        <option key={subject} value={subject}>
+          {subject} ({min}-{target})
+        </option>
+      ))}
+    </select>
+    <input
+      type="number"
+      value={grade}
+      onChange={(e) => setGrade(e.target.value)}
+      placeholder="Grade"
+      className="w-24 p-3 border border-pink-200 rounded-xl"
+    />
+    <button
+      onClick={addGrade}
+      className="px-6 py-3 bg-pink-600 text-white rounded-xl hover:bg-pink-700"
+    >
+      Add Grade
+    </button>
+  </div>
+               )}
 
               {selectedType === 'custom' && (
                 <div className="flex gap-2">
