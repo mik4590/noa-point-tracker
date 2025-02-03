@@ -43,6 +43,8 @@ function App() {
   const [editingEntry, setEditingEntry] = useState(null);
   const [customDesc, setCustomDesc] = useState('');
   const [customPoints, setCustomPoints] = useState('');
+  const [selectedSubject, setSelectedSubject] = useState('');
+  const [grade, setGrade] = useState('');
   const [isAdmin, setIsAdmin] = useState(false);
   const [showPasswordPrompt, setShowPasswordPrompt] = useState(false);
   const [password, setPassword] = useState('');
@@ -172,41 +174,41 @@ function App() {
     a.click();
   };
 
-return (
+  return (
     <div className="min-h-screen bg-gradient-to-b from-pink-50 to-pink-100 p-4">
-    {showPasswordPrompt && (
-      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-        <div className="bg-white rounded-2xl p-6 w-80">
-          <h3 className="text-xl font-semibold text-pink-800 mb-4">Enter Code</h3>
-          <input
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            className="w-full p-3 border border-pink-200 rounded-xl mb-4"
-            placeholder="Enter code to make changes"
-          />
-          <div className="flex justify-end gap-2">
-            <button
-              onClick={() => {
-                setShowPasswordPrompt(false);
-                setPassword('');
-                setActionToConfirm(null);
-              }}
-              className="px-4 py-2 text-gray-600 hover:text-gray-700"
-            >
-              Cancel
-            </button>
-            <button
-              onClick={checkPassword}
-              className="px-6 py-2 bg-pink-600 text-white rounded-xl hover:bg-pink-700"
-            >
-              Submit
-            </button>
+      {showPasswordPrompt && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-2xl p-6 w-80">
+            <h3 className="text-xl font-semibold text-pink-800 mb-4">Enter Code</h3>
+            <input
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              className="w-full p-3 border border-pink-200 rounded-xl mb-4"
+              placeholder="Enter code to make changes"
+            />
+            <div className="flex justify-end gap-2">
+              <button
+                onClick={() => {
+                  setShowPasswordPrompt(false);
+                  setPassword('');
+                  setActionToConfirm(null);
+                }}
+                className="px-4 py-2 text-gray-600 hover:text-gray-700"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={checkPassword}
+                className="px-6 py-2 bg-pink-600 text-white rounded-xl hover:bg-pink-700"
+              >
+                Submit
+              </button>
+            </div>
           </div>
         </div>
-      </div>
-    )}
-    
+      )}
+      
       <div className="max-w-4xl mx-auto">
         {/* Points Display */}
         <div className="bg-white rounded-2xl shadow-lg p-8 mb-6 text-center">
@@ -224,7 +226,7 @@ return (
           </p>
         </div>
 
-        {/* Action Buttons */}
+        {/* Tabs */}
         <div className="flex justify-center gap-4 mb-6">
           <button
             onClick={() => setActiveTab('actions')}
@@ -249,219 +251,230 @@ return (
         </div>
 
         {activeTab === 'actions' ? (
-          <div className="space-y-6">
-            {/* Entry Form */}
-            <div className="bg-white rounded-2xl shadow-lg p-6">
-              <select
-                value={selectedType}
-                onChange={(e) => setSelectedType(e.target.value)}
-                className="w-full p-3 mb-4 border border-pink-200 rounded-xl"
-              >
-                <option value="">Select Entry Type</option>
-                <option value="deduction">Deduction</option>
-                <option value="bonus">Bonus</option>
-                <option value="grade">Grade</option>
-                <option value="custom">Custom Entry</option>
+         <div className="space-y-6">
+           {/* Entry Form */}
+           <div className="bg-white rounded-2xl shadow-lg p-6">
+             <select
+               value={selectedType}
+               onChange={(e) => setSelectedType(e.target.value)}
+               className="w-full p-3 mb-4 border border-pink-200 rounded-xl"
+             >
+               <option value="">Select Entry Type</option>
+               <option value="deduction">Deduction</option>
+               <option value="bonus">Bonus</option>
+               <option value="grade">Grade</option>
+               <option value="custom">Custom Entry</option>
+             </select>
 
-              </select>
+             {selectedType === 'deduction' && (
+               <select
+                 value={selectedEvent}
+                 onChange={(e) => {
+                   const deduction = DEDUCTIONS.find(d => d.label === e.target.value);
+                   if (deduction) addEntry(deduction.label, deduction.points);
+                 }}
+                 className="w-full p-3 border border-pink-200 rounded-xl"
+               >
+                 <option value="">Select Deduction</option>
+                 {DEDUCTIONS.map(d => (
+                   <option key={d.label} value={d.label}>{d.label} ({d.points})</option>
+                 ))}
+               </select>
+             )}
 
-              {selectedType === 'deduction' && (
-                <select
-                  value={selectedEvent}
-                  onChange={(e) => {
-                    const deduction = DEDUCTIONS.find(d => d.label === e.target.value);
-                    if (deduction) addEntry(deduction.label, deduction.points);
-                  }}
-                  className="w-full p-3 border border-pink-200 rounded-xl"
-                >
-                  <option value="">Select Deduction</option>
-                  {DEDUCTIONS.map(d => (
-                    <option key={d.label} value={d.label}>{d.label} ({d.points})</option>
-                  ))}
-                </select>
-              )}
+             {selectedType === 'bonus' && (
+               <select
+                 value={selectedEvent}
+                 onChange={(e) => {
+                   const bonus = BONUSES.find(b => b.label === e.target.value);
+                   if (bonus) addEntry(bonus.label, bonus.points);
+                 }}
+                 className="w-full p-3 border border-pink-200 rounded-xl"
+               >
+                 <option value="">Select Bonus</option>
+                 {BONUSES.map(b => (
+                   <option key={b.label} value={b.label}>{b.label} (+{b.points})</option>
+                 ))}
+               </select>
+             )}
 
-              {selectedType === 'bonus' && (
-                <select
-                  value={selectedEvent}
-                  onChange={(e) => {
-                    const bonus = BONUSES.find(b => b.label === e.target.value);
-                    if (bonus) addEntry(bonus.label, bonus.points);
-                  }}
-                  className="w-full p-3 border border-pink-200 rounded-xl"
-                >
-                  <option value="">Select Bonus</option>
-                  {BONUSES.map(b => (
-                    <option key={b.label} value={b.label}>{b.label} (+{b.points})</option>
-                  ))}
-                </select>
-              )}
+             {selectedType === 'grade' && (
+               <div className="flex gap-2">
+                 <select
+                   value={selectedSubject}
+                   onChange={(e) => setSelectedSubject(e.target.value)}
+                   className="flex-1 p-3 border border-pink-200 rounded-xl"
+                 >
+                   <option value="">Select Subject</option>
+                   {Object.entries(GRADE_EXPECTATIONS).map(([subject, { min, target }]) => (
+                     <option key={subject} value={subject}>
+                       {subject} ({min}-{target})
+                     </option>
+                   ))}
+                 </select>
+                 <input
+                   type="number"
+                   value={grade}
+                   onChange={(e) => setGrade(e.target.value)}
+                   placeholder="Grade"
+                   className="w-24 p-3 border border-pink-200 rounded-xl"
+                 />
+                 <button
+                   onClick={addGrade}
+                   className="px-6 py-3 bg-pink-600 text-white rounded-xl hover:bg-pink-700"
+                 >
+                   Add Grade
+                 </button>
+               </div>
+             )}
 
-              {selectedType === 'grade' && (
-  <div className="flex gap-2">
-    <select
-      value={selectedSubject}
-      onChange={(e) => setSelectedSubject(e.target.value)}
-      className="flex-1 p-3 border border-pink-200 rounded-xl"
-    >
-      <option value="">Select Subject</option>
-      {Object.entries(GRADE_EXPECTATIONS).map(([subject, { min, target }]) => (
-        <option key={subject} value={subject}>
-          {subject} ({min}-{target})
-        </option>
-      ))}
-    </select>
-    <input
-      type="number"
-      value={grade}
-      onChange={(e) => setGrade(e.target.value)}
-      placeholder="Grade"
-      className="w-24 p-3 border border-pink-200 rounded-xl"
-    />
-    <button
-      onClick={addGrade}
-      className="px-6 py-3 bg-pink-600 text-white rounded-xl hover:bg-pink-700"
-    >
-      Add Grade
-    </button>
-  </div>
-               )}
+             {selectedType === 'custom' && (
+               <div className="flex gap-2">
+                 <input
+                   value={customDesc}
+                   onChange={(e) => setCustomDesc(e.target.value)}
+                   placeholder="Description"
+                   className="flex-1 p-3 border border-pink-200 rounded-xl"
+                 />
+                 <input
+                   type="number"
+                   value={customPoints}
+                   onChange={(e) => setCustomPoints(e.target.value)}
+                   placeholder="Points"
+                   className="w-24 p-3 border border-pink-200 rounded-xl"
+                 />
+                 <button
+                   onClick={() => {
+                     if (customDesc && customPoints) {
+                       addEntry(customDesc, parseInt(customPoints));
+                       setCustomDesc('');
+                       setCustomPoints('');
+                     }
+                   }}
+                   className="px-6 py-3 bg-pink-600 text-white rounded-xl hover:bg-pink-700"
+                 >
+                   Add
+                 </button>
+               </div>
+             )}
+           </div>
 
-              {selectedType === 'custom' && (
-                <div className="flex gap-2">
-                  <input
-                    value={customDesc}
-                    onChange={(e) => setCustomDesc(e.target.value)}
-                    placeholder="Description"
-                    className="flex-1 p-3 border border-pink-200 rounded-xl"
-                  />
-                  <input
-                    type="number"
-                    value={customPoints}
-                    onChange={(e) => setCustomPoints(e.target.value)}
-                    placeholder="Points"
-                    className="w-24 p-3 border border-pink-200 rounded-xl"
-                  />
-                  <button
-                    onClick={() => {
-                      if (customDesc && customPoints) {
-                        addEntry(customDesc, parseInt(customPoints));
-                        setCustomDesc('');
-                        setCustomPoints('');
-                      }
-                    }}
-                    className="px-6 py-3 bg-pink-600 text-white rounded-xl hover:bg-pink-700"
-                  >
-                    Add
-                  </button>
-                </div>
-              )}
-            </div>
+           {/* History */}
+           <div className="bg-white rounded-2xl shadow-lg p-6">
+             <h3 className="text-xl font-semibold text-pink-800 mb-4">History</h3>
+             <div className="space-y-2">
+               {history.map((entry, index) => (
+                 <div
+                   key={index}
+                   className={`p-4 rounded-xl flex justify-between items-center group ${
+                     entry.isPositive ? 'bg-green-50' : 'bg-pink-50'
+                   }`}
+                 >
+                   <span className={entry.isPositive ? 'text-green-700' : 'text-pink-700'}>
+                     {entry.date}: {entry.description} {entry.isPositive && '🤩'}
+                   </span>
+                   <div className="flex items-center gap-4">
+                     <span className={entry.isPositive ? 'text-green-600' : 'text-red-600'}>
+                       {entry.points > 0 ? '+' : ''}{entry.points}
+                     </span>
+                     <button
+                       onClick={() => handleEdit(entry, index)}
+                       className="opacity-0 group-hover:opacity-100 text-gray-500 hover:text-gray-700"
+                     >
+                       ⋮
+                     </button>
+                   </div>
+                 </div>
+               ))}
+             </div>
+             <button
+               onClick={exportData}
+               className="w-full mt-4 p-3 text-pink-600 hover:bg-pink-50 rounded-xl"
+             >
+               Export History
+             </button>
+           </div>
+         </div>
+       ) : (
+         <div className="bg-white rounded-2xl shadow-lg p-6">
+           <div className="space-y-4">
+             <h3 className="text-xl font-semibold text-pink-800 mb-4">Grade Expectations</h3>
+             {Object.entries(GRADE_EXPECTATIONS).map(([subject, { min, target }]) => (
+               <div key={subject} className="flex justify-between items-center p-2 border-b border-pink-100">
+                 <span className="font-medium">{subject}</span>
+                 <span>
+                   Min: <span className="text-red-600">{min}</span>, 
+                   Target: <span className="text-green-600">{target}</span> 
+                   <span className="text-sm text-gray-500 ml-2">(+5 points when reached)</span>
+                 </span>
+               </div>
+             ))}
+             <h3 className="text-xl font-semibold text-pink-800 mt-6 mb-4">Points System</h3>
+             {[...DEDUCTIONS, ...BONUSES].map((item) => (
+               <div key={item.label} className="flex justify-between items-center p-2 border-b border-pink-100">
+                 <span>{item.label}</span>
+                 <span className={item.points > 0 ? 'text-green-600' : 'text-red-600'}>
+                   {item.points > 0 ? '+' : ''}{item.points}
+                 </span>
+               </div>
+             ))}
+           </div>
+         </div>
+       )}
 
-            {/* History */}
-            <div className="bg-white rounded-2xl shadow-lg p-6">
-              <h3 className="text-xl font-semibold text-pink-800 mb-4">History</h3>
-              <div className="space-y-2">
-                {history.map((entry, index) => (
-                  <div
-                    key={index}
-                    className={`p-4 rounded-xl flex justify-between items-center group ${
-                      entry.isPositive ? 'bg-green-50' : 'bg-pink-50'
-                    }`}
-                  >
-                    <span className={entry.isPositive ? 'text-green-700' : 'text-pink-700'}>
-                      {entry.date}: {entry.description} {entry.isPositive && '🤩'}
-                    </span>
-                    <div className="flex items-center gap-4">
-                      <span className={entry.isPositive ? 'text-green-600' : 'text-red-600'}>
-                        {entry.points > 0 ? '+' : ''}{entry.points}
-                      </span>
-                      <button
-                        onClick={() => handleEdit(entry, index)}
-                        className="opacity-0 group-hover:opacity-100 text-gray-500 hover:text-gray-700"
-                      >
-                        ⋮
-                      </button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-              <button
-                onClick={exportData}
-                className="w-full mt-4 p-3 text-pink-600 hover:bg-pink-50 rounded-xl"
-              >
-                Export History
-              </button>
-            </div>
-          </div>
-        ) : (
-          <div className="bg-white rounded-2xl shadow-lg p-6">
-            <div className="space-y-4">
-              {[...DEDUCTIONS, ...BONUSES].map((item) => (
-                <div key={item.label} className="flex justify-between items-center p-2 border-b border-pink-100">
-                  <span>{item.label}</span>
-                  <span className={item.points > 0 ? 'text-green-600' : 'text-red-600'}>
-                    {item.points > 0 ? '+' : ''}{item.points}
-                  </span>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* Edit Modal */}
-        {editingEntry && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
-            <div className="bg-white rounded-2xl p-6 w-96" onClick={e => e.stopPropagation()}>
-              <h3 className="text-xl font-semibold text-pink-800 mb-4">Edit Entry</h3>
-              <form onSubmit={handleSaveEdit} className="space-y-4">
-                <input
-                  type="text"
-                  value={editingEntry.date}
-                  onChange={e => setEditingEntry({...editingEntry, date: e.target.value})}
-                  className="w-full p-3 border border-pink-200 rounded-xl"
-                />
-                <input
-                  type="text"
-                  value={editingEntry.description}
-                  onChange={e => setEditingEntry({...editingEntry, description: e.target.value})}
-                  className="w-full p-3 border border-pink-200 rounded-xl"
-                />
-                <input
-                  type="number"
-                  value={editingEntry.points}
-                  onChange={e => setEditingEntry({...editingEntry, points: parseInt(e.target.value)})}
-                  className="w-full p-3 border border-pink-200 rounded-xl"
-                />
-                <div className="flex justify-end gap-2">
-                  <button
-                    type="button"
-                    onClick={() => handleDelete(editingEntry.index)}
-                    className="px-4 py-2 text-red-600 hover:text-red-700"
-                  >
-                    Delete
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setEditingEntry(null)}
-                    className="px-4 py-2 text-gray-600 hover:text-gray-700"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    type="submit"
-                    className="px-6 py-2 bg-pink-600 text-white rounded-xl hover:bg-pink-700"
-                  >
-                    Save
-                  </button>
-                </div>
-              </form>
-            </div>
-          </div>
-        )}
-      </div>
-    </div>
-  );
+       {/* Edit Modal */}
+       {editingEntry && (
+         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
+           <div className="bg-white rounded-2xl p-6 w-96" onClick={e => e.stopPropagation()}>
+             <h3 className="text-xl font-semibold text-pink-800 mb-4">Edit Entry</h3>
+             <form onSubmit={handleSaveEdit} className="space-y-4">
+               <input
+                 type="text"
+                 value={editingEntry.date}
+                 onChange={e => setEditingEntry({...editingEntry, date: e.target.value})}
+                 className="w-full p-3 border border-pink-200 rounded-xl"
+               />
+               <input
+                 type="text"
+                 value={editingEntry.description}
+                 onChange={e => setEditingEntry({...editingEntry, description: e.target.value})}
+                 className="w-full p-3 border border-pink-200 rounded-xl"
+               />
+               <input
+                 type="number"
+                 value={editingEntry.points}
+                 onChange={e => setEditingEntry({...editingEntry, points: parseInt(e.target.value)})}
+                 className="w-full p-3 border border-pink-200 rounded-xl"
+               />
+               <div className="flex justify-end gap-2">
+                 <button
+                   type="button"
+                   onClick={() => handleDelete(editingEntry.index)}
+                   className="px-4 py-2 text-red-600 hover:text-red-700"
+                 >
+                   Delete
+                 </button>
+                 <button
+                   type="button"
+                   onClick={() => setEditingEntry(null)}
+                   className="px-4 py-2 text-gray-600 hover:text-gray-700"
+                 >
+                   Cancel
+                 </button>
+                 <button
+                   type="submit"
+                   className="px-6 py-2 bg-pink-600 text-white rounded-xl hover:bg-pink-700"
+                 >
+                   Save
+                 </button>
+               </div>
+             </form>
+           </div>
+         </div>
+       )}
+     </div>
+   </div>
+ );
 }
 
 export default App;
