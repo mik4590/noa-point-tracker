@@ -298,35 +298,37 @@ function App() {
                </select>
              )}
 
-             {selectedType === 'grade' && (
-               <div className="flex gap-2">
-                 <select
-                   value={selectedSubject}
-                   onChange={(e) => setSelectedSubject(e.target.value)}
-                   className="flex-1 p-3 border border-pink-200 rounded-xl"
-                 >
-                   <option value="">Select Subject</option>
-                   {Object.entries(GRADE_EXPECTATIONS).map(([subject, { min, target }]) => (
-                     <option key={subject} value={subject}>
-                       {subject} ({min}-{target})
-                     </option>
-                   ))}
-                 </select>
-                 <input
-                   type="number"
-                   value={grade}
-                   onChange={(e) => setGrade(e.target.value)}
-                   placeholder="Grade"
-                   className="w-24 p-3 border border-pink-200 rounded-xl"
-                 />
-                 <button
-                   onClick={addGrade}
-                   className="px-6 py-3 bg-pink-600 text-white rounded-xl hover:bg-pink-700"
-                 >
-                   Add Grade
-                 </button>
-               </div>
-             )}
+{selectedType === 'grade' && (
+  <div className="flex flex-col gap-2 w-full">
+    <div className="flex gap-2">
+      <select
+        value={selectedSubject}
+        onChange={(e) => setSelectedSubject(e.target.value)}
+        className="w-2/3 p-3 border border-pink-200 rounded-xl"
+      >
+        <option value="">Select Subject</option>
+        {Object.entries(GRADE_EXPECTATIONS).map(([subject, { min, target }]) => (
+          <option key={subject} value={subject}>
+            {subject} ({min}-{target})
+          </option>
+        ))}
+      </select>
+      <input
+        type="number"
+        value={grade}
+        onChange={(e) => setGrade(e.target.value)}
+        placeholder="Grade"
+        className="w-1/3 p-3 border border-pink-200 rounded-xl"
+      />
+    </div>
+    <button
+      onClick={addGrade}
+      className="w-full py-3 bg-pink-600 text-white rounded-xl hover:bg-pink-700"
+    >
+      Add Grade
+    </button>
+  </div>
+)}
 
              {selectedType === 'custom' && (
                <div className="flex gap-2">
